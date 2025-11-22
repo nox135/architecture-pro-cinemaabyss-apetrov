@@ -1,0 +1,60 @@
+/'
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+Person(userMob, "mobile", "Watches content")
+Person(userDesktop, "desktop", "Watches content")
+Person(userSmartTV, "smartTV", "Watches content")
+
+System_Boundary(cinema, "CinemaAbyss System") {
+    Container(api, "API Gateway", "Container", "Entry point for clients")
+    Container(videos, "Videos Service", "Container", "Video catalog & streaming")
+    Container(subs, "Subscriptions Service", "Container", "Plans & billing")
+    Container(discounts, "Discounts Service", "Container", "Promo codes & offers")
+    Container(metadata, "Metadata Service", "Container", "Video details & tags")
+    Container(users, "Users Service", "Container", "Information about users")
+}
+
+Rel(userMob, api, "Uses")
+Rel(userDesktop, api, "Uses")
+Rel(userSmartTV, api, "Uses")
+Rel(api, videos, "Requests video content")
+Rel(api, subs, "Manages subscriptions")
+Rel(api, discounts, "Applies discounts")
+Rel(api, metadata, "Fetches metadata")
+Rel(api, users, "Fetches user data")
+Rel(subs, discounts, "Checks for valid discounts")
+@enduml
+'/
+
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(user_mobile,"Mobile User","Смотрит фильмы и управляет профилем")
+Person(user_web,"Web User","Использует веб-версию")
+Person(user_tv,"SmartTV User","Использует SmartTV приложение")
+System_Boundary(system,"КиноБездна — Домены") {
+  System(user_domain,"User & Identity Domain","Управление пользователями, авторизация")
+  System(content_domain,"Content Domain","Каталог, метаданные, медиа-активы")
+  System(engagement_domain,"Engagement Domain","Избранное, оценки, просмотры")
+  System(commerce_domain,"Commerce Domain","Подписки, платежи, биллинг")
+  System(recom_domain,"Recommendations Domain","Прокси для ML-рекомендаций")
+  System(integration_domain,"Integrations Domain","Платёжки, loyalty, партнёры")
+  System(platform_domain,"Platform Domain","API Gateway, Kafka, Observability")
+}
+System_Ext(ext_recom,"External Recommendation System","ML Engine")
+System_Ext(ext_payments,"External Payment Providers","Acquiring/Billing")
+System_Ext(ext_loyalty,"External Loyalty Programs","Партнёры")
+Rel(user_mobile,platform_domain,"HTTP/HTTPS")
+Rel(user_web,platform_domain,"HTTP/HTTPS")
+Rel(user_tv,platform_domain,"HTTP/HTTPS")
+Rel(platform_domain,user_domain,"Проксирование запросов")
+Rel(platform_domain,content_domain,"Запросы каталога и метаданных")
+Rel(platform_domain,engagement_domain,"Оценки, избранное, просмотры")
+Rel(platform_domain,commerce_domain,"Платежи, подписки")
+Rel(platform_domain,recom_domain,"Рекомендации")
+Rel(platform_domain,integration_domain,"Внешние интеграции")
+Rel(recom_domain,ext_recom,"Запросы рекомендаций/метрики")
+Rel(commerce_domain,ext_payments,"Платёжные транзакции")
+Rel(integration_domain,ext_loyalty,"Бонусы/скидки")
+@enduml
