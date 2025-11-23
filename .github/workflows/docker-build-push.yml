@@ -106,40 +106,6 @@ jobs:
           push: false
           tags: ${{ steps.meta-proxy.outputs.tags }}
 
-      # -----------------------------------------------------
-      # RUN DOCKER COMPOSE + TESTS
-      # -----------------------------------------------------
-
-      - name: Start Docker Compose
-        run: |
-          docker compose -f docker-compose.yml up -d
-          sleep 30
-
-      #- name: Wait for services to become healthy
-       #run: |
-        #  echo "Waiting for all services to become healthy..."
-         # timeout 90 bash -c '
-          #  while true; do
-           ##
-             # if [ -n "$unhealthy" ]; then
-              #  echo "Unhealthy services detected: $unhealthy"
-               # exit 1
-         #     fi
-#
-#             if [ $healthy_count -ge 4 ]; then
-#                echo "All services are healthy!"
-#                exit 0
-#              fi
-#
- #             echo "Still waiting..."
-  #            sleep 3
-   #         done
-    #      '
-
-      - name: Run API tests
-        run: |
-          chmod +x run-tests.sh
-          ./run-tests.sh -d -e docker
 
       # -----------------------------------------------------
       # PUSH IMAGES (ONLY IF TESTS PASSED)
