@@ -113,7 +113,7 @@ jobs:
       - name: Start Docker Compose
         run: |
           docker compose -f docker-compose.yml up -d
-          sleep
+          sleep 30
 
       #- name: Wait for services to become healthy
        #run: |
