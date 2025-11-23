@@ -102,7 +102,7 @@ jobs:
       - name: Build Proxy
         uses: docker/build-push-action@v4
         with:
-          context: ./src/proxy
+          context: ./src/microservices/proxy
           push: false
           tags: ${{ steps.meta-proxy.outputs.tags }}
 
