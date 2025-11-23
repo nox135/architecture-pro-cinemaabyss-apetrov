@@ -12,7 +12,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o monolith .
+RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o monolith .
 
 # Use a smaller image for the final application
 FROM alpine:latest  
