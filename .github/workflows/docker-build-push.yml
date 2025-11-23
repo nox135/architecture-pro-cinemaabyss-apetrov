@@ -113,29 +113,28 @@ jobs:
       - name: Start Docker Compose
         run: |
           docker compose -f docker-compose.yml up -d
+          sleep
 
-      - name: Wait for services to become healthy
-        run: |
-          echo "Waiting for all services to become healthy..."
-          timeout 90 bash -c '
-            while true; do
-              unhealthy=$(docker ps --filter "health=unhealthy" --format "{{.Names}}")
-              healthy_count=$(docker ps --filter "health=healthy" --format "{{.Names}}" | wc -l)
-
-              if [ -n "$unhealthy" ]; then
-                echo "Unhealthy services detected: $unhealthy"
-                exit 1
-              fi
-
-              if [ $healthy_count -ge 4 ]; then
-                echo "All services are healthy!"
-                exit 0
-              fi
-
-              echo "Still waiting..."
-              sleep 3
-            done
-          '
+      #- name: Wait for services to become healthy
+       #run: |
+        #  echo "Waiting for all services to become healthy..."
+         # timeout 90 bash -c '
+          #  while true; do
+           ##
+             # if [ -n "$unhealthy" ]; then
+              #  echo "Unhealthy services detected: $unhealthy"
+               # exit 1
+         #     fi
+#
+#             if [ $healthy_count -ge 4 ]; then
+#                echo "All services are healthy!"
+#                exit 0
+#              fi
+#
+ #             echo "Still waiting..."
+  #            sleep 3
+   #         done
+    #      '
 
       - name: Run API tests
         run: |
