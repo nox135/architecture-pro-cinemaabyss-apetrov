@@ -56,6 +56,7 @@ jobs:
         with:
           context: ./src/monolith
           push: false
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta-monolith.outputs.tags }}
 
       - name: Extract metadata for Movies
@@ -72,6 +73,7 @@ jobs:
         with:
           context: ./src/microservices/movies
           push: false
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta-movies.outputs.tags }}
 
       - name: Extract metadata for Events
@@ -88,6 +90,7 @@ jobs:
         with:
           context: ./src/microservices/events
           push: false
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta-events.outputs.tags }}
 
       - name: Extract metadata for Proxy
@@ -104,6 +107,7 @@ jobs:
         with:
           context: ./src/microservices/proxy
           push: false
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta-proxy.outputs.tags }}
 
 
