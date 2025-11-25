@@ -51,6 +51,10 @@ jobs:
             type=sha,format=short
             latest
 
+# ------------------ DEBUG STEP ------------------
+      - name: Show Events tags mono
+        run: echo "EVENTS TAGS = '${{ steps.meta-events.outputs.tags }}'"
+
       - name: Build Monolith
         uses: docker/build-push-action@v4
         with:
@@ -84,6 +88,9 @@ jobs:
           tags: |
             type=sha,format=short
             latest
+# ------------------ DEBUG STEP ------------------
+      - name: Show Events tags 1
+        run: echo "EVENTS TAGS = '${{ steps.meta-events.outputs.tags }}'"
 
       - name: Build Events
         uses: docker/build-push-action@v4
@@ -101,6 +108,9 @@ jobs:
           tags: |
             type=sha,format=short
             latest
+# ------------------ DEBUG STEP ------------------
+      - name: Show Events tags 2
+        run: echo "EVENTS TAGS = '${{ steps.meta-events.outputs.tags }}'"
 
       - name: Build Proxy
         uses: docker/build-push-action@v4
