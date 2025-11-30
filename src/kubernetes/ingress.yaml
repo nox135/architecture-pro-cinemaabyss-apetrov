@@ -25,3 +25,17 @@ spec:
                 name: events-service
                 port:
                   number: 8082
+          - path: /api/users
+            pathType: Prefix
+            backend:
+              service:
+                name: monolith
+                port:
+                  number: 8080
+          - path: /api/movies
+            pathType: Prefix
+            backend:
+              service:
+                name: movies-service
+                port:
+                  number: 8081

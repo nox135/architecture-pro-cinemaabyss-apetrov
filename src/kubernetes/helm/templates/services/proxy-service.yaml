@@ -24,8 +24,32 @@ spec:
         app: proxy-service
     spec:
       containers:
-      - name: proxy-service
-        ..... тут
+        - name: proxy-service
+          image: ghcr.io/nox135/architecture-pro-cinemaabyss-apetrov/proxy-service:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MONOLITH_URL
+              value: "http://monolith:8080"
+            - name: MOVIES_SERVICE_URL
+              value: "http://movies-service:8081"
+            - name: EVENTS_SERVICE_URL
+              value: "http://events-service:8082"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: dockerconfigjson
 ---
 apiVersion: v1
 kind: Service
@@ -38,5 +62,9 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
   selector:
-    ... и тут
+    app: proxy-service
+  ports:
+    - port: {{ .Values.proxyService.service.port }}
+      targetPort: {{ .Values.proxyService.service.targetPort }}
+  type: ClusterIP
 {{- end }}
