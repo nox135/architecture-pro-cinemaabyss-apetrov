@@ -19,14 +19,32 @@ func getenv(key, def string) string {
 
 // Прокси запрос
 func proxyRequest(target string, w http.ResponseWriter, r *http.Request) {
-	resp, err := http.Get(target)
+	// Создаем новый HTTP запрос с сохранением метода и тела
+	req, err := http.NewRequest(r.Method, target, r.Body)
+	if err != nil {
+		http.Error(w, "Failed to create request", http.StatusInternalServerError)
+		return
+	}
+
+	// Копируем заголовки
+	for name, values := range r.Header {
+		for _, v := range values {
+			req.Header.Add(name, v)
+		}
+	}
+
+	// Используем http.DefaultClient
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		http.Error(w, "Failed to proxy request", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
 
+	// Прокидываем статус код
 	w.WriteHeader(resp.StatusCode)
+
+	// Прокидываем тело ответа
 	io.Copy(w, resp.Body)
 }
 
