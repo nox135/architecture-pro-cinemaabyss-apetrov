@@ -17,9 +17,8 @@ func getenv(key, def string) string {
 	return def
 }
 
-// Прокси запрос
+// Универсальная функция прокси для любого HTTP метода
 func proxyRequest(target string, w http.ResponseWriter, r *http.Request) {
-	// Создаем новый HTTP запрос с сохранением метода и тела
 	req, err := http.NewRequest(r.Method, target, r.Body)
 	if err != nil {
 		http.Error(w, "Failed to create request", http.StatusInternalServerError)
@@ -33,18 +32,22 @@ func proxyRequest(target string, w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Используем http.DefaultClient
-	resp, err := http.DefaultClient.Do(req)
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		http.Error(w, "Failed to proxy request", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
 
-	// Прокидываем статус код
-	w.WriteHeader(resp.StatusCode)
+	// Прокидываем заголовки ответа
+	for k, v := range resp.Header {
+		for _, vv := range v {
+			w.Header().Add(k, vv)
+		}
+	}
 
-	// Прокидываем тело ответа
+	w.WriteHeader(resp.StatusCode)
 	io.Copy(w, resp.Body)
 }
 
@@ -57,7 +60,7 @@ func main() {
 	migrationPercentStr := getenv("MOVIES_MIGRATION_PERCENT", "0")
 	migrationPercent, _ := strconv.Atoi(migrationPercentStr)
 
-	// ---- Health check (нужно ТЕСТАМ!) ----
+	// ---- Health check для прокси ----
 	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -69,7 +72,7 @@ func main() {
 		proxyRequest(monolithURL+"/api/users", w, r)
 	})
 
-	// ---- Movies proxy (с миграцией) ----
+	// ---- Movies proxy с миграцией ----
 	http.HandleFunc("/api/movies", func(w http.ResponseWriter, r *http.Request) {
 		if rand.Intn(100) < migrationPercent {
 			proxyRequest(moviesURL+"/api/movies", w, r)
@@ -78,7 +81,12 @@ func main() {
 		}
 	})
 
-	// ---- EVENTS proxy ----
+	// ---- Movies health check ----
+	http.HandleFunc("/api/movies/health", func(w http.ResponseWriter, r *http.Request) {
+		proxyRequest(moviesURL+"/api/movies/health", w, r)
+	})
+
+	// ---- Events proxy ----
 	http.HandleFunc("/api/events/user", func(w http.ResponseWriter, r *http.Request) {
 		proxyRequest(eventsURL+"/api/events/user", w, r)
 	})
@@ -87,6 +95,14 @@ func main() {
 	})
 	http.HandleFunc("/api/events/movie", func(w http.ResponseWriter, r *http.Request) {
 		proxyRequest(eventsURL+"/api/events/movie", w, r)
+	})
+
+	// ---- Payments и Subscriptions (если будут отдельные сервисы) ----
+	http.HandleFunc("/api/payments", func(w http.ResponseWriter, r *http.Request) {
+		proxyRequest(monolithURL+"/api/payments", w, r)
+	})
+	http.HandleFunc("/api/subscriptions", func(w http.ResponseWriter, r *http.Request) {
+		proxyRequest(monolithURL+"/api/subscriptions", w, r)
 	})
 
 	port := getenv("PORT", "8000")
