@@ -15,7 +15,7 @@ COPY . .
 RUN CGO_ENABLED=0 go build -a -installsuffix cgo -o monolith .
 
 # Use a smaller image for the final application
-FROM alpine:latest  
+FROM alpine3.19:latest  
 
 RUN apk --no-cache add ca-certificates
 
