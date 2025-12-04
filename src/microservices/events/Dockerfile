@@ -5,7 +5,7 @@ RUN go mod download
 COPY . .
 RUN go build -o events main.go
 
-FROM alpine3.19:latest
+FROM alpine:3.19
 WORKDIR /app
 COPY --from=builder /app/events .
 EXPOSE 8082
