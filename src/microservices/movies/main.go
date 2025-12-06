@@ -31,6 +31,7 @@ func main() {
 	// Set up HTTP routes
 	http.HandleFunc("/api/movies", handleMovies)
 	http.HandleFunc("/api/movies/health", handleHealth)
+	http.HandleFunc("/health", handleHealth)
 
 	// Start server
 	port := os.Getenv("PORT")

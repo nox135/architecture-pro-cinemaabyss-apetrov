@@ -1,0 +1,96 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+LAYOUT_WITH_LEGEND()
+
+Person(user,"Пользователь","Mobile/Web/SmartTV клиент")
+
+System_Boundary(user_domain,"User & Identity Domain") {
+  Container(auth_service,"Auth Service","Go","OAuth2, JWT")
+  ContainerDb(pg_users,"Users DB","PostgreSQL","Хранение данных пользователей")
+  Container(user_service,"User Profile Service","Go","Профили и настройки")
+  Rel(auth_service,pg_users,"Чтение/Запись auth данных")
+  Rel(user_service,pg_users,"CRUD профилей")
+}
+
+System_Boundary(content_domain,"Content Domain") {
+  Container(catalog_service,"Catalog Service","Go","Поиск, фильтры, выдача карточек")
+  ContainerDb(pg_catalog,"Catalog DB","PostgreSQL","Каталог фильмов")
+  Container(metadata_service,"Metadata Service","Go","Жанры, актёры, описания")
+  ContainerDb(pg_meta,"Metadata DB","PostgreSQL","Метаданные фильмов")
+  Container(media_service,"Media Assets Service","Go","Постеры, превью")
+  ContainerDb(minio,"Media Storage","MinIO/S3","Хранение медиа")
+  Rel(catalog_service,pg_catalog,"CRUD")
+  Rel(metadata_service,pg_meta,"CRUD")
+  Rel(media_service,minio,"Хранение/чтение медиа")
+}
+
+System_Boundary(engagement_domain,"Engagement Domain") {
+  Container(favorites_service,"Favorites Service","Go","Избранное пользователя")
+  Container(ratings_service,"Ratings Service","Go","Оценки и рецензии")
+  Container(viewing_service,"Viewing History Service","Go","История просмотров пользователя")
+}
+
+System_Boundary(commerce_domain,"Commerce Domain") {
+  Container(payments_service,"Payments Service","Go","Обработка платежей")
+  Container(subscriptions_service,"Subscriptions Service","Go","Подписки и статусы")
+  ContainerDb(pg_pay,"Payments DB","PostgreSQL","Платежи и подписки")
+  Rel(payments_service,pg_pay,"CRUD платежей")
+  Rel(subscriptions_service,pg_pay,"CRUD подписок")
+}
+
+System_Boundary(recom_domain,"Recommendations Domain") {
+  Container(recom_proxy,"Recommendation Proxy","Go","Прокси для внешней ML системы")
+}
+
+System_Boundary(integration_domain,"Integrations Domain") {
+  Container(payment_integrations,"Payment Integrations","Go","Внешние платёжные системы")
+  Container(loyalty_integrations,"Loyalty Integrations","Go","Программы лояльности, партнёры")
+}
+
+Container(api_gateway,"API Gateway / Ingress","NGINX / Kong","Единая точка входа для всех клиентов")
+Container(kafka,"Kafka","Event Bus","Асинхронная шина событий между сервисами")
+
+System_Ext(ext_recom,"External Recommendation System","ML Engine")
+System_Ext(ext_payments,"External Payment Providers","Acquiring/Billing")
+System_Ext(ext_loyalty,"External Loyalty Programs","Партнёры")
+
+' Пользователь взаимодействует с Gateway
+Rel(user,api_gateway,"HTTP/HTTPS")
+
+' Gateway → Сервисы
+Rel(api_gateway,auth_service,"HTTP/gRPC")
+Rel(api_gateway,user_service,"HTTP/gRPC")
+Rel(api_gateway,catalog_service,"HTTP/gRPC")
+Rel(api_gateway,metadata_service,"HTTP/gRPC")
+Rel(api_gateway,media_service,"HTTP/gRPC")
+Rel(api_gateway,favorites_service,"HTTP/gRPC")
+Rel(api_gateway,ratings_service,"HTTP/gRPC")
+Rel(api_gateway,viewing_service,"HTTP/gRPC")
+Rel(api_gateway,payments_service,"HTTP/gRPC")
+Rel(api_gateway,subscriptions_service,"HTTP/gRPC")
+Rel(api_gateway,recom_proxy,"HTTP/gRPC")
+Rel(api_gateway,payment_integrations,"HTTP/gRPC")
+Rel(api_gateway,loyalty_integrations,"HTTP/gRPC")
+
+' Внутренние зависимости между сервисами
+Rel(catalog_service,metadata_service,"Получение метаданных")
+Rel(catalog_service,media_service,"Получение медиа-активов")
+Rel(favorites_service,media_service,"Обложки и превью")
+Rel(ratings_service,catalog_service,"Привязка оценок к контенту")
+Rel(viewing_service,catalog_service,"Сопоставление просмотренного контента")
+
+' Асинхронные события через Kafka
+Rel(catalog_service,kafka,"События просмотров")
+Rel(ratings_service,kafka,"События оценок")
+Rel(subscriptions_service,kafka,"События подписок")
+Rel(recom_proxy,kafka,"Событийные данные для рекомендаций")
+
+' Взаимодействие с внешними системами
+Rel(recom_proxy,ext_recom,"REST/gRPC")
+Rel(payment_integrations,ext_payments,"HTTP/gRPC")
+Rel(loyalty_integrations,ext_loyalty,"HTTP/gRPC")
+Rel(payments_service,payment_integrations,"Внешние платежи")
+Rel(subscriptions_service,payment_integrations,"Оплата подписки")
+Rel(subscriptions_service,loyalty_integrations,"Применение бонусов/скидок")
+
+@enduml
